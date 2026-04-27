@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion de Films</title>
+    <style>
+        /* Style général de la page */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #1a1a2e; color: #eee; }
+
+        /* Barre de navigation */
+        nav {
+            background: #16213e;
+            padding: 15px 30px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        nav h1 { color: #e94560; margin-right: auto; }
+        nav button {
+            background: #0f3460;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        nav button:hover { background: #e94560; }
+        nav button.active { background: #e94560; }
+
+        /* Contenu principal */
+        .container { padding: 30px; max-width: 1200px; margin: 0 auto; }
+
+        /* Sections (onglets) */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* Titres de section */
+        h2 { color: #e94560; margin-bottom: 20px; font-size: 24px; }
+
+        /* Formulaires */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #aaa; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            background: #16213e;
+            border: 1px solid #0f3460;
+            color: white;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .btn {
+            background: #e94560;
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        .btn:hover { background: #c73652; }
+        .btn-green { background: #27ae60; }
+        .btn-green:hover { background: #219a52; }
+
+        /* Tableaux */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #16213e;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        th {
+            background: #0f3460;
+            padding: 12px;
+            text-align: left;
+            color: #e94560;
+        }
+        td { padding: 12px; border-bottom: 1px solid #0f3460; }
+        tr:hover { background: #0f3460; }
+
+        /* Badge disponibilité */
+        .badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .badge-green { background: #27ae60; color: white; }
+        .badge-red   { background: #e74c3c; color: white; }
+
+        /* Messages de succès/erreur */
+        .message {
+            padding: 10px 20px;
+            border-radius: 5px;
+            margin: 10px 0;
+            display: none;
+        }
+        .message.success { background: #27ae60; display: block; }
+        .message.error   { background: #e74c3c; display: block; }
+
+        /* Formulaire en deux colonnes */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    </style>
+</head>
+<body>
+
+<!-- BARRE DE NAVIGATION -->
+<nav>
+    <h1>🎬 Gestion Films</h1>
+    <button onclick="afficherSection('films')" class="active" id="btn-films">Films</button>
+    <button onclick="afficherSection('clients')" id="btn-clients">Clients</button>
+    <button onclick="afficherSection('emprunts')" id="btn-emprunts">Emprunts</button>
+</nav>
+
+<div class="container">
+
+    <!-- ================================ -->
+    <!-- SECTION FILMS                    -->
+    <!-- ================================ -->
+    <div id="section-films" class="section active">
+        <h2>📽️ Catalogue des Films</h2>
+
+        <!-- Formulaire d'ajout de film -->
+        <div class="form-row">
+            <div class="form-group">
+                <label>Titre *</label>
+                <input type="text" id="film-titre" placeholder="Ex: Inception">
+            </div>
+            <div class="form-group">
+                <label>Réalisateur</label>
+                <input type="text" id="film-realisateur" placeholder="Ex: Christopher Nolan">
+            </div>
+            <div class="form-group">
+                <label>Année</label>
+                <input type="number" id="film-annee" placeholder="Ex: 2010">
+            </div>
+            <div class="form-group">
+                <label>Genre</label>
+                <input type="text" id="film-genre" placeholder="Ex: Science-Fiction">
+            </div>
+        </div>
+        <button class="btn" onclick="ajouterFilm()">➕ Ajouter le film</button>
+        <div id="msg-film" class="message"></div>
+
+        <!-- Tableau des films -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Titre</th>
+                    <th>Réalisateur</th>
+                    <th>Année</th>
+                    <th>Genre</th>
+                    <th>Disponible</th>
+                </tr>
+            </thead>
+            <tbody id="tableau-films">
+                <tr><td colspan="6">Chargement...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ================================ -->
+    <!-- SECTION CLIENTS                  -->
+    <!-- ================================ -->
+    <div id="section-clients" class="section">
+        <h2>👥 Gestion des Clients</h2>
+
+        <!-- Formulaire d'ajout de client -->
+        <div class="form-row">
+            <div class="form-group">
+                <label>Nom *</label>
+                <input type="text" id="client-nom" placeholder="Ex: Dupont">
+            </div>
+            <div class="form-group">
+                <label>Prénom *</label>
+                <input type="text" id="client-prenom" placeholder="Ex: Jean">
+            </div>
+            <div class="form-group">
+                <label>Email *</label>
+                <input type="email" id="client-email" placeholder="Ex: jean@mail.com">
+            </div>
+            <div class="form-group">
+                <label>Téléphone</label>
+                <input type="text" id="client-telephone" placeholder="Ex: 0102030405">
+            </div>
+        </div>
+        <button class="btn" onclick="ajouterClient()">➕ Ajouter le client</button>
+        <div id="msg-client" class="message"></div>
+
+        <!-- Tableau des clients -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nom</th>
+                    <th>Prénom</th>
+                    <th>Email</th>
+                    <th>Téléphone</th>
+                    <th>Inscription</th>
+                </tr>
+            </thead>
+            <tbody id="tableau-clients">
+                <tr><td colspan="6">Chargement...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ================================ -->
+    <!-- SECTION EMPRUNTS                 -->
+    <!-- ================================ -->
+    <div id="section-emprunts" class="section">
+        <h2>📋 Gestion des Emprunts</h2>
+
+        <!-- Formulaire d'emprunt -->
+        <div class="form-row">
+            <div class="form-group">
+                <label>Client *</label>
+                <select id="emprunt-client">
+                    <option value="">-- Choisir un client --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Film *</label>
+                <select id="emprunt-film">
+                    <option value="">-- Choisir un film --</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Date de retour prévue *</label>
+                <input type="date" id="emprunt-date-retour">
+            </div>
+        </div>
+        <button class="btn" onclick="creerEmprunt()">📤 Enregistrer l'emprunt</button>
+        <div id="msg-emprunt" class="message"></div>
+
+        <!-- Tableau des emprunts -->
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Client</th>
+                    <th>Film</th>
+                    <th>Emprunté le</th>
+                    <th>Retour prévu</th>
+                    <th>Retour réel</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="tableau-emprunts">
+                <tr><td colspan="7">Chargement...</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    // ============================================
+    // CONFIGURATION
+    // URLs de nos deux serveurs
+    // ============================================
+    const API_FILMS   = 'http://127.0.0.1:8000'; // FastAPI
+    const API_NODE    = 'http://127.0.0.1:3000'; // NodeJS
+
+    // ============================================
+    // NAVIGATION ENTRE SECTIONS
+    // Comme changer d'onglet dans Windev
+    // ============================================
+    function afficherSection(nom) {
+        // Cacher toutes les sections
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+
+        // Afficher la section choisie
+        document.getElementById('section-' + nom).classList.add('active');
+        document.getElementById('btn-' + nom).classList.add('active');
+
+        // Recharger les données de la section
+        if (nom === 'films')   chargerFilms();
+        if (nom === 'clients') chargerClients();
+        if (nom === 'emprunts') {
+            chargerEmprunts();
+            chargerSelectClients();
+            chargerSelectFilms();
+        }
+    }
+
+    // ============================================
+    // AFFICHER UN MESSAGE
+    // ============================================
+    function afficherMessage(id, texte, type) {
+        const el = document.getElementById(id);
+        el.textContent = texte;
+        el.className = 'message ' + type;
+        // Cacher le message après 3 secondes
+        setTimeout(() => el.className = 'message', 3000);
+    }
+
+    // ============================================
+    // GESTION DES FILMS
+    // ============================================
+
+    // Charger et afficher tous les films
+    async function chargerFilms() {
+        // fetch() = appel HTTP, comme une requête réseau Windev
+        const response = await fetch(API_FILMS + '/films');
+        const films = await response.json(); // Convertir la réponse en objet JS
+
+        const tbody = document.getElementById('tableau-films');
+        tbody.innerHTML = ''; // Vider le tableau
+
+        films.forEach(film => {
+            const ligne = `
+                <tr>
+                    <td>${film.id}</td>
+                    <td>${film.titre}</td>
+                    <td>${film.realisateur || '-'}</td>
+                    <td>${film.annee || '-'}</td>
+                    <td>${film.genre || '-'}</td>
+                    <td>
+                        <span class="badge ${film.disponible ? 'badge-green' : 'badge-red'}">
+                            ${film.disponible ? '✅ Disponible' : '❌ Emprunté'}
+                        </span>
+                    </td>
+                </tr>
+            `;
+            tbody.innerHTML += ligne;
+        });
+    }
+
+    // Ajouter un film
+    async function ajouterFilm() {
+        const film = {
+            titre       : document.getElementById('film-titre').value,
+            realisateur : document.getElementById('film-realisateur').value,
+            annee       : parseInt(document.getElementById('film-annee').value) || null,
+            genre       : document.getElementById('film-genre').value
+        };
+
+        if (!film.titre) {
+            afficherMessage('msg-film', 'Le titre est obligatoire !', 'error');
+            return;
+        }
+
+        // Envoyer les données au serveur FastAPI
+        const response = await fetch(API_FILMS + '/films', {
+            method  : 'POST',
+            headers : { 'Content-Type': 'application/json' },
+            body    : JSON.stringify(film) // Convertir en JSON
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            afficherMessage('msg-film', 'Film ajouté avec succès !', 'success');
+            chargerFilms(); // Rafraîchir le tableau
+        } else {
+            afficherMessage('msg-film', 'Erreur : ' + result.detail, 'error');
+        }
+    }
+
+    // ============================================
+    // GESTION DES CLIENTS
+    // ============================================
+
+    async function chargerClients() {
+        const response = await fetch(API_NODE + '/clients');
+        const clients = await response.json();
+
+        const tbody = document.getElementById('tableau-clients');
+        tbody.innerHTML = '';
+
+        clients.forEach(client => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${client.id}</td>
+                    <td>${client.nom}</td>
+                    <td>${client.prenom}</td>
+                    <td>${client.email}</td>
+                    <td>${client.telephone || '-'}</td>
+                    <td>${client.date_inscription || '-'}</td>
+                </tr>
+            `;
+        });
+    }
+
+    async function ajouterClient() {
+        const client = {
+            nom       : document.getElementById('client-nom').value,
+            prenom    : document.getElementById('client-prenom').value,
+            email     : document.getElementById('client-email').value,
+            telephone : document.getElementById('client-telephone').value
+        };
+
+        if (!client.nom || !client.prenom || !client.email) {
+            afficherMessage('msg-client', 'Nom, prénom et email sont obligatoires !', 'error');
+            return;
+        }
+
+        const response = await fetch(API_NODE + '/clients', {
+            method  : 'POST',
+            headers : { 'Content-Type': 'application/json' },
+            body    : JSON.stringify(client)
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            afficherMessage('msg-client', 'Client ajouté avec succès !', 'success');
+            chargerClients();
+        } else {
+            afficherMessage('msg-client', 'Erreur : ' + result.erreur, 'error');
+        }
+    }
+
+    // ============================================
+    // GESTION DES EMPRUNTS
+    // ============================================
+
+    // Remplir le select des clients
+    async function chargerSelectClients() {
+        const response = await fetch(API_NODE + '/clients');
+        const clients = await response.json();
+        const select = document.getElementById('emprunt-client');
+        select.innerHTML = '<option value="">-- Choisir un client --</option>';
+        clients.forEach(c => {
+            select.innerHTML += `<option value="${c.id}">${c.nom} ${c.prenom}</option>`;
+        });
+    }
+
+    // Remplir le select des films disponibles
+    async function chargerSelectFilms() {
+        const response = await fetch(API_FILMS + '/films/disponibles/liste');
+        const films = await response.json();
+        const select = document.getElementById('emprunt-film');
+        select.innerHTML = '<option value="">-- Choisir un film --</option>';
+        films.forEach(f => {
+            select.innerHTML += `<option value="${f.id}">${f.titre}</option>`;
+        });
+    }
+
+    async function chargerEmprunts() {
+        const response = await fetch(API_NODE + '/emprunts');
+        const emprunts = await response.json();
+
+        const tbody = document.getElementById('tableau-emprunts');
+        tbody.innerHTML = '';
+
+        emprunts.forEach(e => {
+            tbody.innerHTML += `
+                <tr>
+                    <td>${e.id}</td>
+                    <td>${e.nom} ${e.prenom}</td>
+                    <td>${e.titre}</td>
+                    <td>${e.date_emprunt}</td>
+                    <td>${e.date_retour_prevue}</td>
+                    <td>${e.date_retour_reelle || '⏳ En cours'}</td>
+                    <td>
+                        ${!e.date_retour_reelle
+                            ? `<button class="btn btn-green" onclick="retournerFilm(${e.id})">↩️ Retour</button>`
+                            : '✅ Rendu'}
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    async function creerEmprunt() {
+        const emprunt = {
+            client_id         : parseInt(document.getElementById('emprunt-client').value),
+            film_id           : parseInt(document.getElementById('emprunt-film').value),
+            date_retour_prevue: document.getElementById('emprunt-date-retour').value
+        };
+
+        if (!emprunt.client_id || !emprunt.film_id || !emprunt.date_retour_prevue) {
+            afficherMessage('msg-emprunt', 'Tous les champs sont obligatoires !', 'error');
+            return;
+        }
+
+        const response = await fetch(API_NODE + '/emprunts', {
+            method  : 'POST',
+            headers : { 'Content-Type': 'application/json' },
+            body    : JSON.stringify(emprunt)
+        });
+
+        const result = await response.json();
+        if (response.ok) {
+            afficherMessage('msg-emprunt', 'Emprunt enregistré !', 'success');
+            chargerEmprunts();
+            chargerSelectFilms();
+        } else {
+            afficherMessage('msg-emprunt', 'Erreur : ' + result.erreur, 'error');
+        }
+    }
+
+    async function retournerFilm(empruntId) {
+        const response = await fetch(API_NODE + '/emprunts/' + empruntId + '/retour', {
+            method: 'PUT'
+        });
+        const result = await response.json();
+        if (response.ok) {
+            afficherMessage('msg-emprunt', result.message, 'success');
+            chargerEmprunts();
+            chargerSelectFilms();
+        }
+    }
+
+    // ============================================
+    // CHARGEMENT INITIAL
+    // Charger les films au démarrage de la page
+    // ============================================
+    chargerFilms();
+</script>
+</body>
+</html>

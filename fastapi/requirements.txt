@@ -1,0 +1,5 @@
+festapi
+uvicorn
+pymysql
+pydantic
+
